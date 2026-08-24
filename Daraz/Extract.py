@@ -1,3 +1,4 @@
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -10,13 +11,23 @@ def search_daraz_for_product():
     # Initialize Chrome driver using webdriver-manager
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service)
-    
+
+    # Initialize default values for product details
+    product_name = "N/A"
+    product_price = "N/A"
+    product_rating = "No Rating"
+    product_count = "0 Reviews"
+
+    # Initialize an empty list to store error logs
+    error_logs = []
     try:
         # 1. Open Daraz
         try:
             driver.get("https://www.daraz.com.np")
         except Exception as e:
-            print(f"Error occurred while opening Daraz: {e}")
+            error_msg = f"Error occurred while opening Daraz: {e}"
+            print(error_msg)
+            error_logs.append(error_msg)
 
         # Optional: Maximize browser window
         driver.maximize_window()
@@ -28,9 +39,10 @@ def search_daraz_for_product():
                 EC.presence_of_element_located((By.ID, "q"))
             )
         except Exception as e:
-            print(f"Error locating search box: {e}")
-            
-        
+            error_msg = f"Error locating search box: {e}"
+            print(error_msg)
+            error_logs.append(error_msg)
+
         # 3. Type the product name and press Enter
         search_box.send_keys("TANGZU WANER 2 Red Lion Bass Edition")
         search_box.send_keys(Keys.RETURN)
@@ -42,8 +54,9 @@ def search_daraz_for_product():
                 EC.element_to_be_clickable((By.XPATH, "//div[@data-qa-locator='product-item']//a"))
             ).click()
         except Exception as e:
-            print(f"Error clicking on product image: {e}")
-            
+            error_msg = f"Error clicking on product image: {e}"
+            print(error_msg)
+            error_logs.append(error_msg)
 
         # print(driver.current_url)
         # driver.save_screenshot("debug.png") # Check what Selenium actually sees
@@ -53,8 +66,9 @@ def search_daraz_for_product():
             )
             product_price = product_elements_price.text
         except Exception as e:
-            print(f"Error locating product price: {e}")
-            
+            error_msg = f"Error locating product price: {e}"
+            print(error_msg)
+            error_logs.append(error_msg)
 
         try:
             product_elements_name =  WebDriverWait(driver,10).until(
@@ -62,8 +76,10 @@ def search_daraz_for_product():
         )
             product_name = product_elements_name.text
         except Exception as e:
-            print(f"Error locating product name: {e}")
-              
+            error_msg = f"Error locating product name: {e}"
+            print(error_msg)
+            error_logs.append(error_msg)
+            
 
         try:
             review_element = WebDriverWait(driver,10).until(
@@ -77,7 +93,9 @@ def search_daraz_for_product():
                 )
                 product_rating = product_elements_rating.text
             except Exception as e:
-                print(f"Error locating product rating: {e}")
+                error_msg = f"Error locating product rating: {e}"
+                print(error_msg)
+                error_logs.append(error_msg)
                 product_rating = "No Rating"
                 
 
@@ -87,7 +105,9 @@ def search_daraz_for_product():
                 )
                 product_count = product_elements_count.text
             except Exception as e:
-                print(f"Error locating product count: {e}")
+                error_msg = f"Error locating product count: {e}"
+                print(error_msg)
+                error_logs.append(error_msg)
                 product_count = "0 Reviews"
 
         except Exception as e:
@@ -98,7 +118,7 @@ def search_daraz_for_product():
         print(product_price)
         print(product_rating)
         print(product_count)
-
+        load_product_details_from_file(product_name, product_price, product_rating, product_count)
         print("Successfully searched Daraz for the product!")
         
         # Keep browser open for a few seconds to view results (remove in production)
@@ -106,8 +126,24 @@ def search_daraz_for_product():
         time.sleep(5)
         
     finally:
-        # 5. Close the browser
+        if error_logs:
+            with open("scraper_errors.log", "a", encoding="utf-8") as log_file:
+                log_file.write(f"\n--- Run on {datetime.now()} ---\n")
+                for err in error_logs:
+                    log_file.write(err + "\n")
+        # Close the browser
         driver.quit()
+
+def load_product_details_from_file(product_name, product_price, product_rating, product_count):
+    try:
+        with open('product_details.txt', "a", encoding="utf-8") as file:
+            file.write(product_name + ",")
+            file.write(product_price + ",")
+            file.write(product_rating + ",")
+            file.write(product_count)
+    except Exception as e:
+        print(f"Error saving product details to file: {e}")
+        return "N/A", "N/A", "No Rating", "0 Reviews"
 
 if __name__ == "__main__":
     search_daraz_for_product()
