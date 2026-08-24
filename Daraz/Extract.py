@@ -28,11 +28,42 @@ def search_daraz_for_product():
         search_box.send_keys("TANGZU WANER 2 Red Lion Bass Edition")
         search_box.send_keys(Keys.RETURN)
         
-        # 4. Wait for the search results page to load
+ 
+        # 4. Extract product elements (e.g., product names and prices) 
+        
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "search"))
+            EC.element_to_be_clickable((By.XPATH, "//img[@type='product']"))
+        ).click()
+
+        # print(driver.current_url)
+        # driver.save_screenshot("debug.png") # Check what Selenium actually sees
+
+        product_elements_price = WebDriverWait(driver,10).until(
+            EC.visibility_of_element_located((By.XPATH, "//div[@id='module_product_price_1']//span")
+        ))
+
+        product_elements_name =  WebDriverWait(driver,10).until(
+            EC.visibility_of_element_located((By.XPATH, "//div[@id='module_product_title_1']//h1"))
+        )
+
+        review_element = WebDriverWait(driver,10).until(
+            EC.visibility_of_element_located((By.XPATH, "//div[@id='module_product_review']"))
+        )
+        driver.execute_script("arguments[0].scrollIntoView();", review_element)
+
+        product_elements_rating = WebDriverWait(driver,10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.score span.score-average"))
         )
         
+        product_elements_count = WebDriverWait(driver,10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.count"))
+        )
+        
+        print(product_elements_name.text)
+        print(product_elements_price.text)
+        print(product_elements_rating.text)
+        print(product_elements_count.text)
+
         print("Successfully searched Daraz for the product!")
         
         # Keep browser open for a few seconds to view results (remove in production)
