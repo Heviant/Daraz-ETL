@@ -1,4 +1,5 @@
 from datetime import datetime
+import sqlite3
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -118,7 +119,7 @@ def search_daraz_for_product():
         print(product_price)
         print(product_rating)
         print(product_count)
-        load_product_details_from_file(product_name, product_price, product_rating, product_count)
+        save_product_to_db(product_name, product_price, product_rating, product_count)
         print("Successfully searched Daraz for the product!")
         
         # Keep browser open for a few seconds to view results (remove in production)
@@ -134,16 +135,44 @@ def search_daraz_for_product():
         # Close the browser
         driver.quit()
 
-def load_product_details_from_file(product_name, product_price, product_rating, product_count):
-    try:
-        with open('product_details.txt', "a", encoding="utf-8") as file:
-            file.write(product_name + ",")
-            file.write(product_price + ",")
-            file.write(product_rating + ",")
-            file.write(product_count)
-    except Exception as e:
-        print(f"Error saving product details to file: {e}")
-        return "N/A", "N/A", "No Rating", "0 Reviews"
+# def load_product_details_from_file(product_name, product_price, product_rating, product_count):
+#     try:
+#         with open('product_details.txt', "a", encoding="utf-8") as file:
+#             file.write(product_name + ",")
+#             file.write(product_price + ",")
+#             file.write(product_rating + ",")
+#             file.write(product_count)
+#     except Exception as e:
+#         print(f"Error saving product details to file: {e}")
+#         return "N/A", "N/A", "No Rating", "0 Reviews"
+
+def save_product_to_db(product_name, product_price, product_rating, product_count):
+    conn = sqlite3.connect("daraz_tracker.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS raw_daraz_prices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            product_name TEXT,
+            price TEXT,
+            rating TEXT,
+            review_count TEXT
+        )
+    """)
+    conn.commit()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor.execute("""
+        INSERT INTO raw_daraz_prices (timestamp, product_name, price, rating, review_count)
+        VALUES (?, ?, ?, ?, ?)
+    """, (current_time, product_name, product_price, product_rating, product_count))
+
+    # 4. Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+    print("Data successfully saved to SQLite database!")
+
 
 if __name__ == "__main__":
     search_daraz_for_product()
