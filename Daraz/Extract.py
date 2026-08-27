@@ -135,6 +135,18 @@ def search_daraz_for_product():
         # Close the browser
         driver.quit()
 
+    # Package raw data into a dictionary or straight into a Pandas DataFrame
+    return {
+        "product_name": product_name,
+        "product_price": product_price,
+        "product_rating": product_rating,
+        "product_count": product_count,
+    }
+
+
+
+
+
 # def load_product_details_from_file(product_name, product_price, product_rating, product_count):
 #     try:
 #         with open('product_details.txt', "a", encoding="utf-8") as file:
@@ -146,7 +158,10 @@ def search_daraz_for_product():
 #         print(f"Error saving product details to file: {e}")
 #         return "N/A", "N/A", "No Rating", "0 Reviews"
 
-def save_product_to_db(product_name, product_price, product_rating, product_count):
+
+
+##### for one time setup of the database and table
+def init_db():
     conn = sqlite3.connect("daraz_tracker.db")
     cursor = conn.cursor()
     cursor.execute("""
@@ -160,6 +175,15 @@ def save_product_to_db(product_name, product_price, product_rating, product_coun
         )
     """)
     conn.commit()
+    conn.close()
+
+# init_db()
+
+#### Save product details to the SQLite database
+def save_product_to_db(product_name, product_price, product_rating, product_count):
+    conn = sqlite3.connect("daraz_tracker.db")
+    cursor = conn.cursor()
+   
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     cursor.execute("""
@@ -167,12 +191,9 @@ def save_product_to_db(product_name, product_price, product_rating, product_coun
         VALUES (?, ?, ?, ?, ?)
     """, (current_time, product_name, product_price, product_rating, product_count))
 
-    # 4. Commit the changes and close the connection
+    # Commit the changes and close the connection
     conn.commit()
     conn.close()
 
     print("Data successfully saved to SQLite database!")
 
-
-if __name__ == "__main__":
-    search_daraz_for_product()

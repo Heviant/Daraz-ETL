@@ -27,4 +27,3 @@ def load_data(df):
         con.execute("CREATE TABLE daraz_products AS SELECT * FROM df")
         print("Created new table and loaded data.")
         con.close()
-        

@@ -1,12 +1,12 @@
 import pandas as pd
 
-def transform_product_data(product_name, product_price, product_rating, product_count):
+def transform_product_data(raw_data):
     # Create a DataFrame from the extracted product data
     data = {
-        'Product Name': [product_name],
-        'Product Price': [product_price],
-        'Product Rating': [product_rating],
-        'Product Count': [product_count]
+        "Product Name": [raw_data["product_name"]],
+        "Product Price": [raw_data["product_price"]],
+        "Product Rating": [raw_data["product_rating"]],
+        "Product Count": [raw_data["product_count"]],
     }
     df = pd.DataFrame(data)
 
