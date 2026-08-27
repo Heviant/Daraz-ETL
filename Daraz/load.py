@@ -10,10 +10,21 @@ def load_data(df):
     # Add a timestamp column to the DataFrame before loading
     df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Load/Append the Pandas DataFrame into a DuckDB table
-    con.execute("CREATE TABLE IF NOT EXISTS daraz_products AS SELECT * FROM df")
-    # If the table already exists from a previous run, use append:
-    # con.execute("INSERT INTO daraz_products SELECT * FROM df")
+    # Check if the table 'daraz_products' exists
+    table_exists = con.execute(
+        """
+        SELECT COUNT(*) 
+        FROM information_schema.tables 
+        WHERE table_name = 'daraz_products'
+        """,).fetchone()[0] > 0
 
-    con.close()
-    print("Data successfully transformed and loaded into DuckDB!")
+    if table_exists:
+        # Table exists, so append the new DataFrame rows into it
+        con.execute("INSERT INTO daraz_products SELECT * FROM df")
+        print("Appended new data to existing table.")
+    else:
+        # Table does not exist, create it from the DataFrame
+        con.execute("CREATE TABLE daraz_products AS SELECT * FROM df")
+        print("Created new table and loaded data.")
+        con.close()
+        
